@@ -20,3 +20,15 @@ export function videoPath(puid) {
     }
   })
 }
+
+export function videoHistory(puid, begin, end) {
+  return request({
+    url: '/videoHistory',
+    method: 'get',
+    params: {
+      puid,
+      begin,
+      end
+    }
+  })
+}

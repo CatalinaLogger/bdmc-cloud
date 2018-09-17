@@ -49,7 +49,7 @@
           <el-button class="verify-login" style="width:100%" :loading="loading" type="primary" @click.native.prevent="handleOtherLogin">{{$t('login.logIn')}}</el-button>
         </el-form-item>
       </el-form>
-      <div class="download">为保障数据安全，请在初次使用时下载安装<a class="stress" href="https://cloud.bdsmc.net:8443/bdmcCA.zip" target="_blank">数字证书</a>。</div>
+<!--      <div class="download">为保障数据安全，请在初次使用时下载安装<a class="stress" href="https://cloud.bdsmc.net:8443/bdmcCA.zip" target="_blank">数字证书</a>。</div>-->
     </div>
   </div>
 </template>

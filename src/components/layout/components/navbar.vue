@@ -82,12 +82,12 @@ export default {
     .screen-full
       padding-top 5px
     .login-out
-      margin 5px 15px
+      margin 10px 15px
       padding 0 5px
       color white
       cursor pointer
-      font-size 30px
-      line-height 40px
+      font-size 20px
+      line-height 30px
       background #409eff
       border-radius 5px
       &:hover

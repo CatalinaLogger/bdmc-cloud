@@ -10,10 +10,47 @@
             <div class="device-box">
               <div class="device-card">
                 <p class="head" :class="[dev.online > 0 ? 'online' : 'offline']">{{dev.name}} {{handelFlag(dev)}}</p>
-                <p class="info"><span class="name">设备编号</span><span class="value">{{formatHex(dev.id2)}}</span></p>
-                <p class="info"><span class="name">设备状态</span><span class="value">{{dev.online>0?'在线':'离线'}}</span></p>
-                <p class="info"><span class="name">初始化状态</span><span class="value">{{dev.init>0?'已初始化':'未初始化'}}</span></p>
-                <p class="info"><span class="name">接入时间</span><span class="value">{{dev.updated_at}}</span></p>
+                <scroll-bar class="device-scroll">
+                  <p class="info"><span class="name">设备编号</span><span class="value">{{formatHex(dev.id2)}}</span></p>
+                  <p class="info"><span class="name">设备状态</span><span class="value">{{dev.online>0?'在线':'离线'}}</span></p>
+                  <p class="info"><span class="name">初始化状态</span><span class="value">{{dev.init>0?'已初始化':'未初始化'}}</span></p>
+                  <p class="info"><span class="name">接入时间</span><span class="value">{{dev.updated_at}}</span></p>
+                  <div v-if="!dev.hasMore">
+                    <p class="info"><span class="name">版本号</span><span class="value">{{dev.majorVersionNumber}} . {{dev.minorVersionNumber}} . {{dev.revisionNumber}}</span></p>
+                    <div class="param">
+                      <span class="name">上报周期</span>
+                      <el-input-number class="value"
+                                       size="mini"
+                                       v-model="dev.reportCycle"
+                                       :min="0"
+                                       :max="4294967296">
+                      </el-input-number>
+                    </div>
+                    <div class="param">
+                      <span class="name">通信方式</span>
+                      <el-switch class="value"
+                                 v-model="dev.communicationWay"
+                                 :active-value="1"
+                                 :inactive-value="0"
+                                 active-color="#13ce66"
+                                 inactive-color="#ff4949"
+                                 active-text="LORA"
+                                 inactive-text="GPRS">
+                      </el-switch>
+                    </div>
+                    <div v-if="dev.communicationWay === 1" v-for="(item, index) in dev.lora" :key="item.id2 + index">
+                      <p class="info"><span class="name">LORA编号</span><span class="value">{{item.loraId}}</span></p>
+                      <p class="info"><span class="name">发射功率</span><span class="value">{{item.power}}</span></p>
+                      <p class="info"><span class="name">带宽</span><span class="value">{{item.bandwidth}}</span></p>
+                      <p class="info"><span class="name">扩频因子</span><span class="value">{{item.spreadingFactor}}</span></p>
+                      <p class="info"><span class="name">频点</span><span class="value">{{item.frequency}}</span></p>
+                    </div>
+                  </div>
+                  <div class="foot-bar">
+                    <el-button v-if="dev.hasMore" type="primary" size="mini" :loading="dev.loading" @click="showMore(dev)">{{dev.btnText}}</el-button>
+                    <el-button v-else type="primary" size="mini" :loading="dev.loading" @click="saveMore(dev)">{{dev.btnText}}</el-button>
+                  </div>
+                </scroll-bar>
               </div>
             </div>
           </el-col>
@@ -24,20 +61,22 @@
 </template>
 
 <script type="text/ecmascript-6">
-import treeTable from 'base/tree-table'
-import {sites, listDevices} from 'api/monitor'
+import ScrollBar from 'base/scroll-bar'
+import { mapGetters } from 'vuex'
+import { sites, listDevices } from 'api/monitor'
+import { queryDeviceOrder } from 'common/utils/client'
 
 export default {
   data() {
     return {
-      columns: [
-        {
-          text: '部门名称',
-          value: 'name'
-        }
-      ],
-      surveys: []
+      surveys: [], // 所有设备信息
+      current: [] // 当前选中监测点设备信息
     }
+  },
+  computed: {
+    ...mapGetters([
+      'device'
+    ])
   },
   mounted() {
     this._getSurveys()
@@ -49,10 +88,51 @@ export default {
           let survey = this.surveys.filter(item => {
             return item.id === id
           })
-          console.log(survey)
+          res.forEach(item => {
+            item.loading = false
+            item.btnText = '查看更多'
+            item.hasMore = true
+
+            item.communicationWay = 0
+            item.reportCycle = 0
+          })
           survey[0].devices = res
+          this.current = survey[0].devices
         })
       }
+    },
+    blurCount(dev) {
+      setTimeout(() => {
+        if (dev.loraCount > dev.loraList.length) {
+          dev.loraList.push({
+            loraId: null,
+            power: null,
+            bandwidth: null,
+            spreadingFactor: null,
+            frequency: null
+          })
+        } else {
+          dev.loraList.pop()
+        }
+      }, 10)
+    },
+    /** 加载更多设备信息 */
+    showMore(dev) {
+      dev.loading = true
+      dev.btnText = '正在加载'
+      queryDeviceOrder(dev.id2)
+      setTimeout(() => {
+        if (dev.loading) {
+          this.$message({
+            message: '加载设备信息失败',
+            type: 'warning'
+          })
+          dev.loading = false
+          dev.btnText = '查看更多'
+        }
+      }, 20000)
+    },
+    saveMore() {
     },
     handelFlag(dev) {
       let latflag = dev.latflag === 0 ? 'E' : 'W'
@@ -82,8 +162,20 @@ export default {
       })
     }
   },
+  watch: {
+    device(val) {
+      let device = this.current.filter(item => {
+        return item.id2 === val.device_id
+      })[0]
+      device.loading = false
+      device.btnText = '保存配置'
+      device.hasMore = false
+      Object.assign(device, val.data)
+      console.log(device)
+    }
+  },
   components: {
-    treeTable
+    ScrollBar
   }
 }
 </script>
@@ -101,16 +193,13 @@ export default {
     border-radius 10px
     overflow hidden
     transition .2s
-    transform scale(.9)
     &:hover
-      transform scale(1)
       box-shadow 0 0 8px 4px rgba(0, 0, 0, 0.3)
       z-index 10
     .device-card
       position absolute
       width 100%
       height 100%
-      background #ebebeb
       transform translateY(-100%)
       .head
         margin 0
@@ -123,16 +212,38 @@ export default {
         &.offline
           color white
           background #909399
-      .info
-        margin 0
-        line-height 40px
-        text-align center
-        border-bottom 1px solid white
-        .name
-          display inline-block
-          width 50%
-          border-right 1px solid white
-        .value
-          display inline-block
-          width 50%
+      .device-scroll
+        width 100%
+        height 90%
+        background #ebebeb
+        overflow hidden
+        .info
+          margin 0
+          line-height 40px
+          text-align center
+          border-bottom 1px solid white
+          .name
+            display inline-block
+            width 50%
+            border-right 1px solid white
+          .value
+            display inline-block
+            width 50%
+        .param
+          display flex
+          align-items center
+          margin 0
+          height 40px
+          border-bottom 1px solid white
+          .name
+            width 50%
+            text-align center
+            line-height 40px
+            border-right 1px solid white
+          .value
+            margin 0 auto
+            width 41%
+        .foot-bar
+          padding 10px 20px 0 0
+          float right
 </style>

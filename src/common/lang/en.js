@@ -1,6 +1,7 @@
 export default {
   route: {
     dashboard: 'Dashboard',
+    map: 'Monitor Site',
     monitor: 'Monitor Site',
     video: 'Video',
     devices: 'Devices',

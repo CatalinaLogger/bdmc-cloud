@@ -1,36 +1,23 @@
 import { login, otherLogin, logout } from 'api/login'
-// import { handleMqttData } from 'api/mqtt'
-import { getToken, setToken, removeToken, getUsername, setUsername, getPassword, setPassword } from 'common/utils/auth'
+import { getToken, setToken, removeToken } from 'common/utils/auth'
 import { getUserInfo, setUserInfo } from 'common/utils/cache'
 
 const user = {
   state: {
     token: getToken(),
-    name: '',
     avatar: 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
-    roles: [],
-    me: getUserInfo(),
-    mq: {}
+    me: getUserInfo()
   },
 
   mutations: {
     SET_TOKEN: (state, token) => {
       state.token = token
     },
-    SET_NAME: (state, name) => {
-      state.name = name
-    },
     SET_AVATAR: (state, avatar) => {
       state.avatar = avatar
     },
-    SET_ROLES: (state, roles) => {
-      state.roles = roles
-    },
     SET_ME: (state, me) => {
       state.me = me
-    },
-    SET_MQ: (state, mq) => {
-      state.mq = mq
     }
   },
 
@@ -47,13 +34,6 @@ const user = {
             setUserInfo(response.me)
             commit('SET_TOKEN', `${response.token_type} ${response.access_token}`)
             commit('SET_ME', response.me)
-            /**
-            handleMqttData(response.me, (mq) => {
-              commit('SET_MQ', mq)
-            })
-            */
-            setUsername(username)
-            setPassword(userInfo.password)
             resolve()
           }
         }).catch(error => {
@@ -81,25 +61,11 @@ const user = {
       })
     },
 
-    // 获取用户信息
-    GetInfo({ commit, state }) {
-      return new Promise((resolve) => {
-        commit('SET_ROLES', ['admin', 'user'])
-        setInterval(() => {
-          login(getUsername(), getPassword()).then(response => {
-            commit('SET_TOKEN', `${response.token_type} ${response.access_token}`)
-          })
-        }, 1000 * 60 * 50)
-        resolve()
-      })
-    },
-
     // 登出
     LogOut({ commit, state }) {
       return new Promise((resolve, reject) => {
         logout(state.token).then(() => {
           commit('SET_TOKEN', '')
-          commit('SET_ROLES', [])
           removeToken()
           resolve()
         }).catch(error => {

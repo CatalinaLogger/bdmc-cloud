@@ -1,9 +1,33 @@
 import request from 'common/utils/request'
 
+export function getMapInfo() {
+  return request({
+    url: '/getMapInfo',
+    method: 'get'
+  })
+}
+
 export function sites() {
   return request({
     url: '/listPois',
     method: 'get'
+  })
+}
+
+export function getInsarList() {
+  return request({
+    url: '/insar',
+    method: 'get'
+  })
+}
+
+export function getInsarData(id) {
+  return request({
+    url: '/insarData',
+    method: 'get',
+    params: {
+      id
+    }
   })
 }
 
@@ -111,6 +135,28 @@ export function listDeviceData({id, date, lastId} = {}) {
       start: date[0],
       end: date[1],
       last_id: lastId
+    }
+  })
+}
+
+export function getSurveyReport(poiId, type) {
+  return request({
+    url: '/findImage',
+    method: 'get',
+    params: {
+      poi_id: poiId,
+      type
+    }
+  })
+}
+
+export function pageDevice(pn, ps) {
+  return request({
+    url: '/listDevices3',
+    method: 'get',
+    params: {
+      pn,
+      ps
     }
   })
 }

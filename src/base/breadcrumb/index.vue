@@ -10,6 +10,7 @@
 </template>
 
 <script type="text/ecmascript-6">
+import {mapGetters} from 'vuex'
 import {generateTitle} from 'common/utils/i18n'
 
 export default {
@@ -21,6 +22,11 @@ export default {
       levelList: null
     }
   },
+  computed: {
+    ...mapGetters([
+      'me'
+    ])
+  },
   watch: {
     $route() {
       this.getBreadcrumb()
@@ -31,8 +37,8 @@ export default {
     getBreadcrumb() {
       let matched = this.$route.matched.filter(item => item.name)
       const first = matched[0]
-      if (first && first.name !== 'dashboard') {
-        matched = [{path: '/dashboard', meta: { title: 'dashboard' }}].concat(matched)
+      if (first && first.name !== this.me.project.name) {
+        matched = [{path: '', meta: { title: this.me.project.name }}].concat(matched)
       }
       this.levelList = matched
     }

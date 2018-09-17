@@ -81,6 +81,7 @@
 </template>
 
 <script type="text/ecmascript-6">
+import { mapGetters } from 'vuex'
 import {debounce} from 'common/utils'
 import {listAlarms, handleAlarm} from 'api/alarms'
 export default {
@@ -98,7 +99,10 @@ export default {
   computed: {
     alarmTitle() {
       return `提交处理结果 - ${this.current.alarm.content}`
-    }
+    },
+    ...mapGetters([
+      'warn'
+    ])
   },
   mounted() {
     this._getAlarms()
@@ -142,6 +146,11 @@ export default {
       listAlarms().then(res => {
         this.alarms = res
       })
+    }
+  },
+  watch: {
+    warn() {
+      this._getAlarms()
     }
   }
 }

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Leaflet1</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Promise"></script>
+  <style TYPE="text/css">
+    body {
+      margin: 0px;
+      padding: 0px;
+    }
+    /**
+     * 单独设置mapid为100%不显示，可能float坍塌
+     */
+
+    html,
+    body,
+    #mapDiv {
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+<div id="mapDiv">
+</div>
+</body>
+<script>
+
+  var street = L.tileLayer('http://cloud.bdsmc.net:8001/ChangDe/street/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    minZoom: 3
+  });
+  var satellite = L.tileLayer('http://cloud.bdsmc.net:8001/ChangDe/satellite/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    minZoom: 3
+  });
+
+  var corner1 = L.latLng(30.263812, 110.209351) // 设置左上角经纬度
+  var corner2 = L.latLng(28.134972, 112.571411) // 设置右下点经纬度
+  var bounds = L.latLngBounds(corner1, corner2) // 构建视图限制范围
+
+  var map = L.map('mapDiv', {maxBounds: bounds, layers: [street, satellite]}).setView([29.32472, 111.478271], 9)
+  var baseMaps = {
+    '街道图': street,
+    '卫星图': satellite
+  }
+  L.control.layers(baseMaps).addTo(map)
+
+  var popup = L.popup()
+  function onMapClick(e) {
+    popup.setLatLng(e.latlng).setContent(e.latlng.toString()).openOn(map)
+  }
+  map.on('click', onMapClick)
+  L.circle([29.121001, 111.402001], {radius: 200}).addTo(map)
+</script>
+
+</html>

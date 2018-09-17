@@ -11,18 +11,19 @@
     "build": "node build/build.js"
   },
   "dependencies": {
-    "awe-dnd": "^0.3.1",
     "axios": "^0.18.0",
     "echarts": "^4.0.4",
     "element-ui": "^2.3.2",
     "good-storage": "^1.0.1",
     "hls.js": "^0.9.1",
+    "leaflet": "^1.3.1",
     "mqtt": "^2.17.0",
     "normalize.css": "^8.0.0",
     "nprogress": "^0.2.0",
+    "rbush": "^2.0.2",
     "screenfull": "^3.3.2",
     "vue": "^2.5.2",
-    "vue-amap": "^0.5.4",
+    "vue-amap": "^0.5.7",
     "vue-i18n": "^7.6.0",
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1"

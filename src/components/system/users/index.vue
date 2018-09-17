@@ -66,6 +66,7 @@
       <el-upload
         class="upload-demo"
         ref="upload"
+        :headers="headers"
         :action="`${baseUrl}/addUserList`"
         :file-list="fileList"
         :auto-upload="false">
@@ -82,7 +83,7 @@
       :visible.sync="userVisible">
       <el-form :model="user" :rules="rules" label-width="65px" ref="editForm" style="margin: 0 60px">
         <el-form-item label="用户名" prop="email" :error="error.email">
-          <el-input v-model="user.email"></el-input>
+          <el-input v-model="user.email" maxlength="16"></el-input>
         </el-form-item>
         <el-form-item v-if="user.id" label="密码" :key="1">
           <el-input v-model="user.password"></el-input>
@@ -145,6 +146,7 @@ import Sticky from 'base/sticky'
 import Site from './site'
 import {mapGetters} from 'vuex'
 import {debounce} from 'common/utils'
+import { getToken } from 'common/utils/auth'
 import {listUsers, addUser, updateUser, deleteUser} from 'api/users'
 export default {
   data() {
@@ -179,6 +181,9 @@ export default {
     }
     return {
       baseUrl: process.env.BASE_API,
+      headers: {
+        Authorization: getToken()
+      },
       screenWidth: 0,
       uploadVisible: false,
       userVisible: false,

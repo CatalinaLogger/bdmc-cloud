@@ -1,8 +1,7 @@
-
 import router from './router'
-import store from './store'
 import NProgress from 'nprogress' // Progress 进度条
 import 'nprogress/nprogress.css'// Progress 进度条样式
+import store from '@/store'
 import { getToken } from 'common/utils/auth' // 验权
 
 const whiteList = ['/login'] // 不重定向白名单
@@ -12,11 +11,12 @@ router.beforeEach((to, from, next) => {
     if (to.path === '/login') {
       next({ path: '/' })
     } else {
-      if (store.getters.roles.length === 0) {
-        store.dispatch('GetInfo').then(() => { // 刷新Token保持在线状态
-        })
+      let me = store.getters.me
+      if (to.path === '/user' && me.type !== 1) {
+        next({ path: '/401' })
+      } else {
+        next()
       }
-      next()
     }
   } else {
     if (whiteList.indexOf(to.path) !== -1) {

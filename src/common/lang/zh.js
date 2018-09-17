@@ -1,10 +1,11 @@
 export default {
   route: {
-    dashboard: '首页',
+    dashboard: '宁乡地质灾害监测平台',
+    map: '监测站点',
     monitor: '监测站点',
     video: '视频监控',
     devices: '设备管理',
-    alarms: '报警数据',
+    alarms: '告警数据',
     system: '系统设置',
     users: '用户管理',
     centre: '个人中心',

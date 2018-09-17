@@ -3,8 +3,6 @@ import App from './App'
 import store from './store'
 import router from './router'
 import VueAMap from 'vue-amap'
-import VueDND from 'awe-dnd'
-
 import 'normalize.css/normalize.css'// A modern alternative to CSS resets
 
 import ElementUI from 'element-ui'
@@ -24,11 +22,11 @@ Vue.use(ElementUI, {
 Vue.use(VueAMap)
 VueAMap.initAMapApiLoader({
   key: '1d34df1dae311ab7a6c911b8acd68cef',
-  plugin: ['AMap.Autocomplete', 'AMap.PlaceSearch', 'AMap.Scale', 'AMap.OverView', 'AMap.ToolBar', 'AMap.MapType', 'AMap.PolyEditor', 'AMap.CircleEditor', 'AMap.Geolocation'],
+  plugin: ['AMap.ToolBar', 'AMap.MapType'],
   // 默认高德 sdk 版本为 1.4.4
-  v: '1.4.4'
+  v: '1.4.6',
+  uiVersion: '1.0.11'
 })
-Vue.use(VueDND)
 
 Vue.config.productionTip = false
 

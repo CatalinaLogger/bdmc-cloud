@@ -11,6 +11,13 @@ export function login(username, password) {
   })
 }
 
+export function refresh() {
+  return request({
+    url: '/refresh',
+    method: 'get'
+  })
+}
+
 export function otherLogin(phone, code) {
   return request({
     url: '/login2',

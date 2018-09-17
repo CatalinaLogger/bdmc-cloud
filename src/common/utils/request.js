@@ -1,5 +1,6 @@
 import axios from 'axios'
 import store from '@/store'
+import { Message } from 'element-ui'
 import { getToken } from 'common/utils/auth'
 
 // 创建axios实例
@@ -35,6 +36,12 @@ service.interceptors.response.use(
             location.reload() // 为了重新实例化vue-router对象 避免bug
           })
         }
+      } else if (error.response.status === 403) {
+        Message({
+          message: error.response.data.error,
+          type: 'error',
+          duration: 5 * 1000
+        })
       } else {
         return error.response.data
       }

@@ -1,6 +1,6 @@
 <template>
   <div class="monitor-container">
-    <el-amap class="amap-demo" vid="amapDemo" :center="center" :zoom="zoom" :plugin="plugin" ref="map">
+    <el-amap class="amap-demo" vid="amapDemo" :amap-manager="amapManager" :center="center" :zoom="zoom" :plugin="plugin" ref="map">
       <el-amap-marker v-for="(marker, index) in markers" :position="marker.position" :events="marker.events" :animation="marker.animation" :label="marker.label" :key="index"></el-amap-marker>
       <el-amap-info-window :position="currentWindow.position" :visible="currentWindow.visible" :events="currentWindow.events" :offset="currentWindow.offset" v-if="currentWindow.visible">
         <template>
@@ -16,6 +16,11 @@
             <div v-else class="site-empty">暂无现场图</div>
             <el-button class="site-btn" type="success" size="mini" @click="dialogVisible = true">查看详情</el-button>
           </div>
+        </template>
+      </el-amap-info-window>
+      <el-amap-info-window :position="InSarWindow.position" :visible="InSarWindow.visible" :events="InSarWindow.events" v-if="InSarWindow.visible">
+        <template>
+          <chart :chartData="InSarWindow.chartData" width="600px"></chart>
         </template>
       </el-amap-info-window>
     </el-amap>
@@ -35,17 +40,22 @@
         </el-row>
       </scroll-bar>
     </el-dialog>
+    <div class="switch-button" @click="toggleInSar">
+      <svg-icon icon-class="radar"></svg-icon>
+    </div>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
 import Vue from 'vue'
 import ScrollBar from 'base/scroll-bar'
-import Sites from 'components/monitor/sites'
-import SiteDetail from 'components/monitor/site-detail/index'
-import {AMapManager} from 'vue-amap'
+import Chart from './chart'
+import Sites from './sites'
+import SiteDetail from './site-detail/index'
+import { AMapManager } from 'vue-amap'
 import { mapGetters } from 'vuex'
-import {sites, sitesFilter, listDevices, listSensors, deviceData} from 'api/monitor'
+import { sites, getInsarList, getInsarData, sitesFilter, listDevices, listSensors, deviceData } from 'api/monitor'
+let amapManager = new AMapManager()
 export default {
   name: 'monitor',
   data() {
@@ -58,7 +68,7 @@ export default {
       sites: [],
       current: {},
       devId: null,
-      AMapManager,
+      amapManager,
       zoom: 12,
       center: [113.00, 28.21],
       markers: [],
@@ -76,6 +86,18 @@ export default {
         name: '',
         location: '',
         photos: []
+      },
+      InSar: false,
+      Point: [],
+      InSarWindow: {
+        position: [0, 0],
+        visible: false,
+        chartData: {},
+        events: {
+          close() {
+            self.InSarWindow.visible = false
+          }
+        }
       },
       winData: {},
       ivs: []
@@ -247,6 +269,153 @@ export default {
       var v3 = Math.round((value - v1) * 3600 % 60)
       return v1 + '°' + v2 + '\'' + v3 + '"'
     },
+    toggleInSar2() {
+      let map = amapManager.getMap()
+      console.log(new AMap.Size(11, 11))
+      // 样式对象数组
+      var styleObjectArr = [
+        {
+          url: 'http://a.amap.com/jsapi_demos/static/images/mass0.png',
+          anchor: new AMap.Pixel(6, 6),
+          size: new AMap.Size(11, 11)
+        },
+        {
+          url: 'http://a.amap.com/jsapi_demos/static/images/mass0.png',
+          anchor: new AMap.Pixel(6, 6),
+          size: new AMap.Size(11, 11)
+        }
+      ]
+
+      // 实例化 AMap.MassMarks
+      var massMarks = new AMap.MassMarks({
+        zIndex: 5, // 海量点图层叠加的顺序
+        zooms: [3, 19], // 在指定地图缩放级别范围内展示海量点图层
+        style: styleObjectArr // 多种样式对象的数组
+      })
+
+      // 设置了样式索引的点标记数组
+      var data = [{
+        lnglat: [113.00, 28.21],
+        name: 'beijing',
+        id: 1,
+        style: 0 // 该数据的样式取值styleObjectArr对应的样式索引
+      }, {
+        lnglat: [113.00, 29.21],
+        name: 'beijing',
+        id: 1,
+        style: 1
+      }
+      ]
+      // 将数组设置到 massMarks 图层
+      massMarks.setData(data)
+      // 将 massMarks 添加到地图实例
+      massMarks.setMap(map)
+    },
+    toggleInSar() {
+      let self = this
+      let map = amapManager.getMap()
+      // 加载PointSimplifier，loadUI的路径参数为模块名中 'ui/' 之后的部分
+      AMapUI.loadUI(['misc/PointSimplifier'], function (PointSimplifier) {
+        if (!PointSimplifier.supportCanvas) {
+          alert('当前环境不支持 Canvas！')
+          return
+        }
+        self.InSar = !self.InSar
+        if (self.InSar) {
+          if (self.Point.length > 0) {
+            self.Point.forEach(item => {
+              item.show()
+            })
+          } else {
+            // 启动页面
+            initPage(PointSimplifier)
+          }
+        } else {
+          self.Point.forEach(item => {
+            item.hide()
+          })
+        }
+      })
+
+      function initPage(PointSimplifier) {
+        getInsarList().then(res => {
+          res.forEach(item => {
+            let color = `rgba(${parseInt(item.color.substring(2, 4), 16)}, ${parseInt(item.color.substring(4, 6), 16)}, ${parseInt(item.color.substring(6, 8), 16)}, ${parseInt(item.color.substring(0, 2), 16)})`
+            // 创建组件实例
+            let pointSimplifierIns = new PointSimplifier({
+              map: map, // 关联的map
+              compareDataItem: function (a, b, aIndex, bIndex) {
+                // 数据源中靠后的元素优先，index大的排到前面去
+                return aIndex > bIndex ? -1 : 1
+              },
+              getPosition: function (dataItem) {
+                // 返回数据项的经纬度，AMap.LngLat实例或者经纬度数组
+                return dataItem.position
+              },
+              getHoverTitle: function (dataItem, idx) {
+                // 返回数据项的Title信息，鼠标hover时显示
+                return '序号: ' + idx
+              },
+              renderOptions: {
+                // 点的样式
+                pointStyle: {
+                  content: 'rect',
+                  fillStyle: color // 蓝色填充
+                }
+              }
+            })
+            // 随机创建一批点，仅作示意
+            let data = createPoints(item.insars)
+
+            // 设置数据源，data需要是一个数组
+            pointSimplifierIns.setData(data)
+
+            // 监听事件
+            pointSimplifierIns.on('pointClick', function(e, record) {
+              getInsarData(record.data.id).then(res => {
+                if (res.data.length > 0) {
+                  let xData = []
+                  let yData = []
+                  res.data.forEach(item => {
+                    xData.push(formatTime(item.time))
+                    yData.push(item.value)
+                  })
+                  self.InSarWindow.chartData = { name: '', xData: xData, yData: yData }
+                  self.InSarWindow.position = record.data.position
+                  self.InSarWindow.visible = true
+                }
+              })
+            })
+            self.Point.push(pointSimplifierIns)
+          })
+        })
+      }
+
+      // 仅作示意
+      function createPoints(points) {
+        var data = []
+        points.forEach(item => {
+          data.push({
+            id: item.id,
+            position: [
+              item.lng_g,
+              item.lat_g
+            ]
+          })
+        })
+        return data
+      }
+
+      function formatTime(time) {
+        let unixtime = time
+        let unixTimestamp = new Date(unixtime * 1000)
+        let Y = unixTimestamp.getFullYear()
+        let M = ((unixTimestamp.getMonth() + 1) > 10 ? (unixTimestamp.getMonth() + 1) : '0' + (unixTimestamp.getMonth() + 1))
+        let D = (unixTimestamp.getDate() > 10 ? unixTimestamp.getDate() : '0' + unixTimestamp.getDate())
+        let toDay = Y + '-' + M + '-' + D
+        return toDay
+      }
+    },
     _getSites() {
       sites().then(response => {
         this.sites = response
@@ -319,6 +488,7 @@ export default {
     }
   },
   components: {
+    Chart,
     Sites,
     SiteDetail,
     ScrollBar
@@ -328,7 +498,25 @@ export default {
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
 .monitor-container
+  position relative
   height calc(100vh - 50px)
+  .switch-button
+    position absolute
+    top 12px
+    left 80px
+    height 47px
+    width 47px
+    z-index 10
+    color #ccc
+    cursor pointer
+    font-size 30px
+    text-align center
+    line-height 46px
+    background white
+    border-radius 50%
+    box-shadow 0 0 1px 1px #787878
+    &:hover
+      color #409eff
   .site-window
     padding 0 0 8px 8px
     .site-name

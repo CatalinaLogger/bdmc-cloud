@@ -6,6 +6,9 @@ const getters = {
   name: state => state.user.name,
   roles: state => state.user.roles,
   me: state => state.user.me,
-  mq: state => state.user.mq
+  mq: state => state.user.mq,
+  warn: state => state.client.warn,
+  device: state => state.client.device,
+  player: state => state.client.player
 }
 export default getters
