@@ -49,6 +49,9 @@ a:hover
 .app-container
   padding 20px
 
+.el-button-group
+  margin-top -1px
+
 .tool-bar
   height 50px
   line-height 50px
@@ -71,3 +74,25 @@ a:hover
     background #fff900
   &.danger
     background #f56c6c
+
+.bd-dialog
+  .el-dialog__header
+    height 50px
+    padding 10px 20px
+    background #545c64
+    .el-dialog__title
+      line-height 34px
+      color yellow
+    .el-dialog__headerbtn
+      top 10px
+      .el-dialog__close
+        color white
+        font-size 30px
+  .el-dialog__body
+    padding 0
+  .el-pagination
+    .el-pagination__total
+      color white
+  .el-pagination.is-background .el-pager li:not(.disabled).active
+    color #545c64
+    background-color yellow

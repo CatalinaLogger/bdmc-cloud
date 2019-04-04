@@ -58,7 +58,7 @@
       </el-table-column>
     </el-table>
     <el-dialog
-      top="30vh"
+      top="0"
       width="500px"
       title="导入用户"
       :visible.sync="uploadVisible"
@@ -78,6 +78,7 @@
       </div>
     </el-dialog>
     <el-dialog
+      top="0"
       width="600px"
       title="编辑用户信息"
       :visible.sync="userVisible">
@@ -116,6 +117,7 @@
       </div>
     </el-dialog>
     <el-dialog
+      top="0"
       width="900px"
       :title="userSiteTitle"
       :visible.sync="siteVisible"
@@ -127,7 +129,7 @@
       </div>
     </el-dialog>
     <el-dialog
-      top="30vh"
+      top="0"
       width="400px"
       title="操作提示"
       :visible.sync="removeVisible"

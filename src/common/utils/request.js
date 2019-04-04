@@ -30,6 +30,11 @@ service.interceptors.response.use(
     if (error.response) {
       if (error.response.status === 401) {
         if (error.response.data.error) {
+          Message({
+            message: error.response.data.error,
+            type: 'error',
+            duration: 5 * 1000
+          })
           return error.response.data
         } else {
           store.dispatch('FedLogOut').then(() => {

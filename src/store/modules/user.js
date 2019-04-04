@@ -1,5 +1,5 @@
 import { login, otherLogin, logout } from 'api/login'
-import { getToken, setToken, removeToken } from 'common/utils/auth'
+import { getToken, setToken, removeToken, setUsername, setPassword, removePassword, setRemember } from '@/common/utils/auth'
 import { getUserInfo, setUserInfo } from 'common/utils/cache'
 
 const user = {
@@ -34,6 +34,14 @@ const user = {
             setUserInfo(response.me)
             commit('SET_TOKEN', `${response.token_type} ${response.access_token}`)
             commit('SET_ME', response.me)
+            setUsername(userInfo.username)
+            if (userInfo.remember) {
+              setPassword(userInfo.password)
+              setRemember(userInfo.remember)
+            } else {
+              removePassword()
+              setRemember(userInfo.remember)
+            }
             resolve()
           }
         }).catch(error => {

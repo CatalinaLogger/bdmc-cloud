@@ -29,11 +29,23 @@ export function otherLogin(phone, code) {
   })
 }
 
-export function getPWD(phone) {
+export function getCode(phone) {
   return request({
     url: '/getPWD',
     method: 'post',
     data: {phone}
+  })
+}
+
+export function resetPwd(param) {
+  return request({
+    url: '/resetPwd',
+    method: 'post',
+    data: {
+      phone: param.phone,
+      code: param.code,
+      password: param.password
+    }
   })
 }
 

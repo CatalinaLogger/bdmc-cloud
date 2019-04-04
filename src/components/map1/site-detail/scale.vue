@@ -1,6 +1,6 @@
 <template>
   <el-row :gutter="5">
-    <el-col :span="12" v-for="(item, index) in rules" :key="index">
+    <el-col :span="12" v-for="(item, index) in rules" :key="index" v-if="item.type === '小时'">
       <el-card>
         <el-row :gutter="5">
           <el-col :span="8"><el-tag class="title">{{item.name}}</el-tag></el-col>

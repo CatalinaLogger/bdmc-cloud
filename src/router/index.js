@@ -36,7 +36,7 @@ export const constantRouterMap = [
       {
         path: 'video',
         name: 'video',
-        component: _import('video/index'),
+        component: _import('image/index'),
         meta: { title: 'video', icon: 'video', noCache: true }
       }
     ]
@@ -50,6 +50,18 @@ export const constantRouterMap = [
         name: 'alarms',
         component: _import('warn/index'),
         meta: { title: 'alarms', icon: 'warning', noCache: true }
+      }
+    ]
+  },
+  {
+    path: '',
+    component: Layout,
+    children: [
+      {
+        path: 'report',
+        name: 'report',
+        component: _import('report/index'),
+        meta: { title: 'report', icon: 'report', noCache: true }
       }
     ]
   },

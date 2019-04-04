@@ -69,7 +69,7 @@ export default {
     width 60px
     height 60px
     border-radius 50%
-    background rgba(128, 128, 128, 0.6)
+    background #545c64
     left -30px
     top 50%
     transform translateY(-50%)
@@ -92,8 +92,8 @@ export default {
     overflow hidden
     .site-name
       margin 0
-      font-size 14px
       font-weight bold
+      line-height 14px
       color #909399
       white-space nowrap
       overflow hidden
@@ -101,6 +101,7 @@ export default {
     .site-location
       margin 0
       font-size 12px
+      line-height 12px
       color #C0C4CC
       white-space nowrap
       overflow hidden

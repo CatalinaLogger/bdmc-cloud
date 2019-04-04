@@ -3,12 +3,16 @@
     <sticky className="tool-bar info">
       <template>
         <el-radio-group v-model="warnType" @change="changeType">
-          <el-radio-button :label="0">监测告警</el-radio-button>
-          <el-radio-button :label="1">设备告警</el-radio-button>
-          <el-radio-button :label="2">入侵告警</el-radio-button>
+          <el-radio-button :label="0">监测预警</el-radio-button>
+          <el-radio-button :label="1">设备预警</el-radio-button>
+          <el-radio-button :label="2">入侵预警</el-radio-button>
         </el-radio-group>
         <el-input class="query" v-model="query" placeholder="设备编号"></el-input>
-        <el-select v-model="level" placeholder="请选择级别">
+        <el-select v-model="level1" placeholder="请选择状态" v-if="warnType === 1">
+          <el-option label="掉线" :value="4"></el-option>
+          <el-option label="上线" :value="5"></el-option>
+        </el-select>
+        <el-select v-model="level" placeholder="请选择级别" v-else>
           <el-option label="一级告警" :value="1"></el-option>
           <el-option label="二级告警" :value="2"></el-option>
         </el-select>
@@ -51,6 +55,11 @@
       </el-table-column>
       <el-table-column
         align="center"
+        prop="mac"
+        label="设备编号">
+      </el-table-column>
+      <el-table-column
+        align="center"
         prop="poi_location"
         label="位置">
       </el-table-column>
@@ -89,6 +98,11 @@
         align="center"
         prop="poi_name"
         label="监测点">
+      </el-table-column>
+      <el-table-column
+        align="center"
+        prop="mac"
+        label="设备编号">
       </el-table-column>
       <el-table-column
         align="center"
@@ -194,6 +208,7 @@ export default {
       footerTip: '点击加载更多',
       query: null,
       level: null,
+      level1: null,
       date: [],
       pn: 0,
       ps: 16,
@@ -249,33 +264,33 @@ export default {
       this.loading = true
       this.footerTip = '拼命加载中'
       if (type === 0) { // sensor
-        alarmsSensor(this.pn, this.ps, null, this.formatHex(this.query), this.level, this.date).then(res => {
-          if (res.alarms.length > 0) {
-            this.list = this.list.concat(res.alarms)
+        alarmsSensor(this.pn, this.ps, null, this.query, this.level, this.date).then(res => {
+          if (res.result.length > 0) {
+            this.list = this.list.concat(res.result)
           }
-          if (res.alarms.length < this.ps) {
+          if (res.result.length < this.ps) {
             this.hasMore = false
           }
           this.loading = false
           this.footerTip = '点击加载更多'
         })
       } else if (type === 1) { // device
-        alarmsDevice(this.pn, this.ps, null, this.formatHex(this.query), this.level, this.date).then(res => {
-          if (res.alarms.length > 0) {
-            this.list = this.list.concat(res.alarms)
+        alarmsDevice(this.pn, this.ps, null, this.query, this.level1, this.date).then(res => {
+          if (res.result.length > 0) {
+            this.list = this.list.concat(res.result)
           }
-          if (res.alarms.length < this.ps) {
+          if (res.result.length < this.ps) {
             this.hasMore = false
           }
           this.loading = false
           this.footerTip = '点击加载更多'
         })
       } else { // camera
-        alarmsCamera(this.pn, this.ps, null, this.formatHex(this.query), this.level, this.date).then(res => {
-          if (res.alarms.length > 0) {
-            this.list = this.list.concat(res.alarms)
+        alarmsCamera(this.pn, this.ps, null, this.query, this.level, this.date).then(res => {
+          if (res.result.length > 0) {
+            this.list = this.list.concat(res.result)
           }
-          if (res.alarms.length < this.ps) {
+          if (res.result.length < this.ps) {
             this.hasMore = false
           }
           this.loading = false
@@ -334,8 +349,12 @@ export default {
     tableRowClassName({row}) {
       if (row.type === 1) {
         return 'one-row'
-      } else {
+      } else if (row.type === 2) {
         return 'two-row'
+      } else if (row.type === 4) {
+        return 'four-row'
+      } else if (row.type === 5) {
+        return 'five-row'
       }
     }
   },

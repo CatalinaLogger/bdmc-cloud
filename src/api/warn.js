@@ -8,8 +8,8 @@ export function alarmsDevice(pn, ps, deviceId, query, level, date) {
       pn,
       ps,
       id: deviceId,
-      id2: query,
-      lvl: level,
+      mac: query,
+      type: level,
       starttime: date[0],
       endtime: date[1]
     }
@@ -24,8 +24,8 @@ export function alarmsSensor(pn, ps, deviceId, query, level, date) {
       pn,
       ps,
       id: deviceId,
-      id2: query,
-      lvl: level,
+      mac: query,
+      type: level,
       starttime: date[0],
       endtime: date[1]
     }
@@ -40,8 +40,8 @@ export function alarmsCamera(pn, ps, deviceId, query, level, date) {
       pn,
       ps,
       id: deviceId,
-      id2: query,
-      lvl: level,
+      mac: query,
+      type: level,
       starttime: date[0],
       endtime: date[1]
     }

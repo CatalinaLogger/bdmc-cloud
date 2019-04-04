@@ -54,7 +54,7 @@ export default {
       this.chart = echarts.init(this.$el, 'macarons')
       this._setOptions(this.chartData)
     },
-    _setOptions({ name, unit, xData, yData, oneLess, twoLess, twoMore, oneMore } = {}) {
+    _setOptions({ name, unit, xData, yData, oneLess, twoLess, twoMore, oneMore, min, max } = {}) {
       const option = {
         title: {
           text: unit
@@ -75,7 +75,9 @@ export default {
         yAxis: {
           splitLine: {
             show: false
-          }
+          },
+          min: min,
+          max: max
         },
         dataZoom: [{
           type: 'inside'

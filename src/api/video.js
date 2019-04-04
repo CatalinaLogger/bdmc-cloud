@@ -32,3 +32,21 @@ export function videoHistory(puid, begin, end) {
     }
   })
 }
+
+export function getVideopic() {
+  return request({
+    url: '/getVideopic',
+    method: 'get'
+  })
+}
+
+export function getVideoPicByDate(id, date) {
+  return request({
+    url: '/getVideoPicByDate',
+    method: 'get',
+    params: {
+      id,
+      date
+    }
+  })
+}

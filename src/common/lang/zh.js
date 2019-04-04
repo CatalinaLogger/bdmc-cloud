@@ -67,7 +67,7 @@ export default {
     theme: '换肤'
   },
   login: {
-    title: '北斗微芯云平台登录',
+    title: '云平台',
     logIn: '登 录',
     logInOther: '短信登录',
     verify: '获取验证码',

@@ -67,7 +67,7 @@ export default {
     theme: 'theme'
   },
   login: {
-    title: 'Sign in to BDMC',
+    title: 'Sign in to Cloud',
     logIn: 'Sign In',
     logInOther: 'SMS Sign In ',
     verify: '获取验证码',

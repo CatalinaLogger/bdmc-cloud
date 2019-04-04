@@ -1,7 +1,7 @@
 <template>
   <div class="scroll-charts">
     <div class="head-bar" v-show="devices.length > 0">
-      <el-radio-group v-model="current" @change="changeOption" v-if="devices.length < 11">
+      <el-radio-group v-model="current" @change="changeOption" v-if="devices.length < 10">
         <el-radio-button v-for="(item, index) in devices" :key="index" :label="item">
           <span class="sign" :class="{online: item.online}"></span>
           <span class="name">{{item.name}}</span>
@@ -18,9 +18,10 @@
           <span>{{item.name + ' - '+ formatHex(item.id2)}}</span>
         </el-option>
       </el-select>
-      <el-button class="button" type="danger" @click="showScaleForm">设置阀值</el-button>
+      <el-button class="button" type="danger" @click="showScaleForm">设置阈值</el-button>
     </div>
-    <el-collapse v-model="active">
+    <div>经度：{{current.lng}}，纬度：{{current.lat}}，海拔：{{current.altitude}}</div>
+    <el-collapse v-model="active" @change="changeCollapse">
       <el-collapse-item name="0">
         <template slot="title">
           <el-tag>监测数据</el-tag>
@@ -32,31 +33,14 @@
                 <div class="category-header">
                   <div class="title">
                     {{item.name}}
+                    <span class="desc">{{item.change}} {{item.unit}}/{{item.type}}</span>
                   </div>
+                  <el-button class="history-button" @click="showHistory(item)" round size="mini">查看历史数据</el-button>
                   <div class="empty"></div>
                 </div>
               </el-col>
             </el-row>
-            <el-row>
-              <el-col :sm="6" :xs="12" class="cell-item">
-                <p class="extra-small">初始值 {{item.first}}</p>
-                <p class="medium">{{item.last}} {{item.unit}}</p>
-              </el-col>
-              <el-col :sm="6" :xs="12" class="cell-item">
-                <p class="extra-small">一级预警</p>
-                <p class="extra-small">上限：{{item.oneLess}}</p>
-                <p class="extra-small">下限：{{item.oneMore}}</p>
-              </el-col>
-              <el-col :sm="6" :xs="12" class="cell-item">
-                <p class="extra-small">二级预警</p>
-                <p class="extra-small">上限：{{item.twoLess}}</p>
-                <p class="extra-small">下限：{{item.twoMore}}</p>
-              </el-col>
-              <el-col :sm="6" :xs="12" class="cell-item">
-                <el-button class="history-button" @click="showHistory(item)" round>查看历史数据</el-button>
-              </el-col>
-            </el-row>
-            <chart :chartData="item" :isShow="isShow"></chart>
+            <chart :chartData="item" :isShow="chartActive"></chart>
           </el-col>
         </el-row>
       </el-collapse-item>
@@ -367,7 +351,11 @@ export default {
       },
       history: {
         date: ''
-      }
+      },
+      chartActive: false,
+      jd: 0,
+      wd: 0,
+      hb: 0
     }
   },
   mounted() {
@@ -381,6 +369,13 @@ export default {
     this.alarmVisible = false
   },
   methods: {
+    changeCollapse(val) {
+      if (val.indexOf('0') > -1) {
+        this.chartActive = true
+      } else {
+        this.chartActive = false
+      }
+    },
     showScaleForm() {
       this.scaleVisible = true
     },
@@ -412,6 +407,9 @@ export default {
     },
     // 当选择设备发生变化是重新请求数据
     changeOption() {
+      this.jd = 0
+      this.wd = 0
+      this.hb = 0
       // 清空以前的轮询数据
       this.ivs.forEach(item => {
         clearInterval(item)
@@ -420,35 +418,32 @@ export default {
       let cl = []
       // 拼装监测图表数据
       this._listSensors(this.current.id).then(res => {
-        let sen = res.filter(item => {
-          console.log(item)
-          if (item.name.indexOf('经') > -1 || item.name.indexOf('纬') > -1 || item.name.indexOf('海') > -1) {
-            return false
-          }
-          return true
-        })
-        sen.forEach(item => {
-          let ci = {}
-          ci.id = item.id
-          ci.name = item.name
-          ci.unit = item.unit
-          ci.first = item.value
-          ci.oneLess = item.up1
-          ci.oneMore = item.down1
-          ci.twoLess = item.up2
-          ci.twoMore = item.down2
-          ci.xData = []
-          ci.yData = []
+        res.forEach(item => {
           let self = this
+          let ci = {id: item.id, name: item.name, type: '小时', unit: item.unit, first: item.value, oneLess: item.up1, oneMore: item.down1, twoLess: item.up2, twoMore: item.down2, min: item.down1, max: item.up1, xData: [], yData: [], change: 0}
           let ddf = function() {
             self._deviceData(1, item.id, null).then(res => {
               const size = res.data.length
               if (size > 0) {
-                Vue.set(ci, 'last', res.data[0].displacement)
-                for (let i = 0; i < size; i++) {
-                  let recode = res.data[i]
-                  Vue.set(ci.xData, size - i - 1, recode.gps_time.substring(5, 13))
-                  Vue.set(ci.yData, size - i - 1, recode.displacement)
+                if (item.name.indexOf('经') > -1) {
+                  self.jd = res.data[0].displacement
+                } else if (item.name.indexOf('纬') > -1) {
+                  self.wd = res.data[0].displacement
+                } else if (item.name.indexOf('海') > -1) {
+                  self.hb = res.data[0].displacement.toFixed(1)
+                } else {
+                  ci.change = res.dataChange[0].displacement
+                  for (let i = 0; i < size; i++) {
+                    let recode = res.data[i]
+                    if (recode.displacement > ci.max) {
+                      ci.max = recode.displacement
+                    }
+                    if (recode.displacement < ci.min) {
+                      ci.min = recode.displacement
+                    }
+                    Vue.set(ci.xData, size - i - 1, recode.gps_time.substring(5, 13))
+                    Vue.set(ci.yData, size - i - 1, recode.displacement.toFixed(1))
+                  }
                 }
               }
             })
@@ -456,7 +451,36 @@ export default {
           ddf()
           // 设置轮询实时更新图表
           this.ivs.push(setInterval(ddf, 3000))
-          cl.push(ci)
+          if (!(item.name.indexOf('经') > -1 || item.name.indexOf('纬') > -1 || item.name.indexOf('海') > -1)) {
+            cl.push(ci)
+          }
+          if (item.name.indexOf('经') > -1 || item.name.indexOf('纬') > -1 || item.name.indexOf('海') > -1) {
+            return
+          }
+          let ci1 = {id: item.id, name: item.name, type: '天', unit: item.unit, first: item.value, oneLess: item.up1, oneMore: item.down1, twoLess: item.up2, twoMore: item.down2, min: item.down1, max: item.up1, xData: [], yData: [], change: 0}
+          let ddf1 = function() {
+            self._deviceData(2, item.id, null).then(res => {
+              const size = res.data.length
+              if (size > 0) {
+                ci1.change = res.dataChange[0].displacement
+                for (let i = 0; i < size; i++) {
+                  let recode = res.data[i]
+                  if (recode.displacement > ci.max) {
+                    ci1.max = recode.displacement
+                  }
+                  if (recode.displacement < ci.min) {
+                    ci1.min = recode.displacement
+                  }
+                  Vue.set(ci1.xData, size - i - 1, recode.gps_time.substring(5, 13))
+                  Vue.set(ci1.yData, size - i - 1, recode.displacement)
+                }
+              }
+            })
+          }
+          ddf1()
+          // 设置轮询实时更新图表
+          this.ivs.push(setInterval(ddf1, 1000 * 60 * 60))
+          cl.push(ci1)
         })
       })
       this.chartList = cl
@@ -625,13 +649,13 @@ export default {
     _loadWarns(type) {
       if (type === '1') { // device
         alarmsDevice(this.pn - 1, this.ps, this.current.id, null, null, []).then(res => {
-          this.total = res.totalCount
-          this.warnData = res.alarms
+          this.total = res.count
+          this.warnData = res.result
         })
       } else { // sensor
         alarmsSensor(this.pn - 1, this.ps, this.current.id, null, null, []).then(res => {
-          this.total = res.totalCount
-          this.warnData = res.alarms
+          this.total = res.count
+          this.warnData = res.result
         })
       }
     },
@@ -774,6 +798,14 @@ export default {
       font-weight bold
       line-height 40px
       border-bottom 5px solid #409eff
+      z-index 10
+      .desc
+        color #606266
+        font-size 14px
+        font-weight normal
+    .history-button
+      position absolute
+      right 0
       z-index 10
     .empty
       position absolute
